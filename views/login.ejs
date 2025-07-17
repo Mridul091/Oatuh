@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Login</title>
+  </head>
+  <body>
+    <h1>Login to grant access to <%= client_id %></h1>
+    <form action="/login" method="post">
+      <input type="hidden" name="client_id" value="<%= client_id %>" />
+      <input type="hidden" name="redirect_uri" value="<%= redirect_uri %>" />
+      <input type="hidden" name="state" value="<%= state %>" />
+      <div>
+        <label for="email">Email:</label>
+        <input type="text" id="email" name="email" />
+      </div>
+      <div>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" />
+      </div>
+      <button type="submit">Login and Authorize</button>
+    </form>
+  </body>
+</html>
