@@ -41,14 +41,15 @@ exports.token = async (req, res) => {
   const accessToken = generateRandomString(32);
   const refreshToken = generateRandomString(32);
   const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour from now
+  console.log("user id", user.user_id);
   await pool.query(
     "INSERT INTO access_tokens (token, user_id, client_id, expires_at) VALUES ($1, $2, $3, $4)",
-    [accessToken, user.user_id, client_id, expiresAt]
+    [accessToken, authCode.user_id, authCode.client_id, expiresAt]
   );
 
   await pool.query(
     "INSERT INTO refresh_tokens (token, user_id, client_id) VALUES ($1, $2, $3)",
-    [refreshToken, user.user_id, client_id]
+    [refreshToken, authCode.user_id, authCode.client_id]
   );
 
   res.json({
