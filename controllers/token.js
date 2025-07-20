@@ -1,5 +1,8 @@
 const pool = require("../config/database");
 const crypto = require("crypto");
+const fs = require("fs");
+const Jwt = require("jsonwebtoken");
+const privateKey = fs.readFileSync("./private.pem", "utf8");
 // const { generateRandomString } = require("../index.js");
 function generateRandomString(length) {
   return crypto
@@ -38,14 +41,28 @@ exports.token = async (req, res) => {
   // delete the authorization code after use
   await pool.query("DELETE FROM authorization_codes WHERE code = $1", [code]);
 
-  const accessToken = generateRandomString(32);
+  // const accessToken = generateRandomString(32);
   const refreshToken = generateRandomString(32);
   const expiresAt = new Date(Date.now() + 3600 * 1000); // 1 hour from now
-  console.log("user id", user.user_id);
-  await pool.query(
-    "INSERT INTO access_tokens (token, user_id, client_id, expires_at) VALUES ($1, $2, $3, $4)",
-    [accessToken, authCode.user_id, authCode.client_id, expiresAt]
-  );
+  // console.log("user id", user.user_id);
+  // await pool.query(
+  //   "INSERT INTO access_tokens (token, user_id, client_id, expires_at) VALUES ($1, $2, $3, $4)",
+  //   [accessToken, authCode.user_id, authCode.client_id, expiresAt]
+  // );
+
+  const payload = {
+    user_id: authCode.user_id,
+    client_id: authCode.client_id,
+  };
+
+  const signInOptions = {
+    issuer: "my-auth-server",
+    audience: user.client_id,
+    expiresIn: "1h",
+    algorithm: "RS256",
+  };
+
+  const accessToken = Jwt.sign(payload, privateKey, signInOptions);
 
   await pool.query(
     "INSERT INTO refresh_tokens (token, user_id, client_id) VALUES ($1, $2, $3)",
