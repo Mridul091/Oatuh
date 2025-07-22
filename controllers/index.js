@@ -37,8 +37,15 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { email, password, redirect_uri, client_id } = req.body;
-    console.log("Email:", email);
+    const {
+      email,
+      password,
+      redirect_uri,
+      client_id,
+      code_challenge,
+      code_challenge_method,
+    } = req.body;
+    console.log("Email:", code_challenge);
     const user = await OauthModels.getUserByEmail(email);
     console.log("user", user);
     if (!user) {
@@ -56,8 +63,16 @@ exports.login = async (req, res) => {
     console.log("Auth Code Expires At:", authCodeExpiresAt);
     console.log("User ID:", user.user_id);
     await pool.query(
-      "INSERT INTO authorization_codes (user_id, code, expires_at, client_id, redirect_uri) VALUES ($1, $2, $3, $4, $5)",
-      [user.user_id, authCode, authCodeExpiresAt, client_id, redirect_uri]
+      "INSERT INTO authorization_codes (user_id, code, expires_at, client_id, redirect_uri, code_challenge, code_challenge_method) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+      [
+        user.user_id,
+        authCode,
+        authCodeExpiresAt,
+        client_id,
+        redirect_uri,
+        code_challenge,
+        code_challenge_method,
+      ]
     );
 
     const redirectURL = new URL(redirect_uri);
@@ -68,3 +83,5 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// http://localhost:3000/authorize?response_type=code&client_id=my-awesome-client&redirect_uri=http://localhost:3001/callback&state=xyz&code_challenge=LF5yvIYHVw-qtIjD_PNGrEWJjuJtKOO_l5PBMIFCDvc&code_challenge_method=S256

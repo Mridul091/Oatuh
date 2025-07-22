@@ -11,7 +11,7 @@ function generateRandomString(length) {
     .slice(0, length);
 }
 exports.token = async (req, res) => {
-  const { code, redirect_uri, client_id } = req.body;
+  const { code, redirect_uri, client_id, code_verifier } = req.body;
   console.log("Client id:", client_id);
   console.log("code:", code);
   const userResult = await pool.query(
@@ -38,7 +38,18 @@ exports.token = async (req, res) => {
       .json({ message: "Invalid or expired authorization code" });
   }
 
-  // delete the authorization code after use
+  if (!code_verifier || !authCode.code_challenge) {
+    return res.status(400).json({ message: "Invalid code verifier" });
+  }
+
+  const recreatedChallenge = crypto
+    .createHash("sha256")
+    .update(code_verifier)
+    .digest("base64url");
+
+  if (recreatedChallenge !== authCode.code_challenge) {
+    return res.status(400).json({ message: "Invalid code verifier" });
+  }
   await pool.query("DELETE FROM authorization_codes WHERE code = $1", [code]);
 
   // const accessToken = generateRandomString(32);
